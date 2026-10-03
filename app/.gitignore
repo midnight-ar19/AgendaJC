@@ -1,1 +1,3 @@
 /build
+# Local Pi runtime state
+.atl/
