@@ -11,13 +11,17 @@ import com.example.agendaalan_jc.viewModels.LoginViewModel
 import com.example.agendaalan_jc.viewModels.NotesViewModel
 import com.example.agendaalan_jc.viewModels.RegisterViewModel
 import com.example.agendaalan_jc.views.login.LoginView
+import com.example.agendaalan_jc.views.login.checkSession
+import com.example.agendaalan_jc.views.notes.AddNoteView
 import com.example.agendaalan_jc.views.notes.HomeView
 import com.example.agendaalan_jc.views.register.RegisterView
 
 object Routes {
+    const val CheckSession = "CheckSession"
     const val Login = "login"
     const val Register = "register"
     const val Home = "home"
+    const val AddNote = "AddNote"
 }
 
 @Composable
@@ -30,9 +34,12 @@ fun NavManager(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Routes.Login,
+        startDestination = Routes.CheckSession,
         modifier = Modifier.padding(contentPadding)
     ) {
+        composable(Routes.CheckSession) {
+            checkSession(navController)
+        }
         composable(Routes.Login) {
             LoginView(
                 navController = navController,
@@ -50,8 +57,13 @@ fun NavManager(
                 navController = navController,
                 notesViewModel = notesViewModel
             )
+        }
 
-
+        composable(Routes.AddNote) {
+            AddNoteView(
+                navController = navController,
+                notesViewModel = notesViewModel
+            )
         }
     }
     

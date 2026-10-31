@@ -92,8 +92,10 @@ fun LoginView(
         Button(
             onClick = {
                 if (canSubmit) {
-                    navController.navigate(Routes.Home) {
-                        popUpTo(Routes.Login) { inclusive = true }
+                    loginViewModel.login(email, password){
+                        navController.navigate(Routes.Home) {
+                            popUpTo(Routes.Login) { inclusive = true }
+                        }
                     }
                 }
             },

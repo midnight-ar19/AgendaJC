@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -33,6 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.agendaalan_jc.R
 import com.example.agendaalan_jc.navigation.Routes
 import com.example.agendaalan_jc.viewModels.RegisterViewModel
+import com.example.agendaalan_jc.viewModels.RegistrationValidation
 
 @Composable
 fun RegisterView(
@@ -42,7 +46,9 @@ fun RegisterView(
     var email by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val canSubmit = email.isNotBlank() && username.isNotBlank() && password.isNotBlank()
+    var hasAttemptedSubmit by remember { mutableStateOf(false) }
+    val validation = RegistrationValidation.validate(username, email, password)
+    val isRegistering = registerViewModel.isRegistering
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -60,9 +66,9 @@ fun RegisterView(
 
         Image(
             modifier = Modifier
-                .height(150.dp)
-                .width(150.dp)
-                .padding(15.dp),
+                .height(130.dp)
+                .width(130.dp)
+                .padding(12.dp),
             painter = painterResource(id = R.drawable.registro),
             contentDescription = "Icono de registro"
         )
@@ -70,53 +76,97 @@ fun RegisterView(
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {
+                email = it
+                registerViewModel.clearError()
+            },
             label = { Text("Email") },
             singleLine = true,
+            isError = hasAttemptedSubmit && validation.emailError != null,
+            supportingText = if (hasAttemptedSubmit && validation.emailError != null) {
+                { Text(validation.emailError) }
+            } else null,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             value = username,
-            onValueChange = { username = it },
+            onValueChange = {
+                username = it
+                registerViewModel.clearError()
+            },
             label = { Text("Username") },
             singleLine = true,
+            isError = hasAttemptedSubmit && validation.usernameError != null,
+            supportingText = if (hasAttemptedSubmit && validation.usernameError != null) {
+                { Text(validation.usernameError) }
+            } else null,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             value = password,
-            onValueChange = { password = it },
+            onValueChange = {
+                password = it
+                registerViewModel.clearError()
+            },
             label = { Text("Password") },
             singleLine = true,
+            isError = hasAttemptedSubmit && validation.passwordError != null,
+            supportingText = if (hasAttemptedSubmit && validation.passwordError != null) {
+                { Text(validation.passwordError) }
+            } else null,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        registerViewModel.errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
-                registerViewModel.createUser(username, email, password) {
-                    navController.navigate(Routes.Home) {
-                        popUpTo(Routes.Register) { inclusive = true }
+                hasAttemptedSubmit = true
+                if (validation.isValid) {
+                    registerViewModel.createUser(username, email.trim(), password) {
+                        navController.navigate(Routes.Home) {
+                            popUpTo(Routes.Register) { inclusive = true }
+                        }
                     }
                 }
             },
-            enabled = canSubmit,
+            enabled = !isRegistering,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Registrarme")
+            if (isRegistering) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Creando cuenta...")
+            } else {
+                Text("Registrarme")
+            }
         }
 
         TextButton(
             onClick = { navController.popBackStack() },
+            enabled = !isRegistering,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Volver al login")
